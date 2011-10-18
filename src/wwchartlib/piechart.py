@@ -7,6 +7,8 @@ position.
 
 from __future__ import division
 
+import math
+
 from PySide.QtCore import *
 from PySide.QtGui import *
 
@@ -19,7 +21,17 @@ def fraction_to_angle(fraction):
     Qt understands angels in 16ths-of-a-degree (i.e., one revolution is
     5760).
     """
-    return fraction * 5760
+    return fraction * 360 * 16
+
+
+def theta_to_angle(theta):
+    """Convert an angle in radians to an angle in Qt terms."""
+    return theta * 360 / (2 * math.pi) * 16
+
+
+def angle_to_theta(angle):
+    """Convert an angle in Qt terms to radians."""
+    return angle / 16 / 360 * (2 * math.pi)
 
 
 class PieChartItemError(chart.ChartItemError):
@@ -87,3 +99,61 @@ class PieChart(chart.Chart):
                 span = fraction_to_angle(item.fraction)
                 p.drawPie(rect, angle, span)
                 angle += span
+
+
+class AdjustablePieChart(PieChart):
+    """A ``PieChart`` with adjustable slices."""
+
+    @property
+    def x(self):
+        """x component of the origin of the chart."""
+        return self.width() / 2
+
+    @property
+    def y(self):
+        return self.height() / 2
+        """y component of the origin of the chart."""
+
+    @property
+    def origin(self):
+        """The origin of this pie chart, as tuple (x, y)."""
+        return self.x, self.y
+
+    @property
+    def radius(self):
+        """The radius of the chart."""
+        return min(self.origin)
+
+    def _polar(self, x, y):
+        """Convert cartisian coordinates to polar coordinates.
+
+        Return (radius, angle) (angle in Qt terms).
+        """
+        rel_x = x - self.x
+        rel_y = y - self.y
+        theta = math.atan2(rel_y, rel_x)
+        theta = theta if theta >= 0 else theta + math.pi * 2
+        return self.radius, theta_to_angle(theta)
+
+    def _cartesian(self, angle):
+        """Returns cartesian coordinates of point on graph at given angle.
+
+        The point returned is on the circumference of the graph.
+
+        angle
+          The angle, in Qt terms.
+        """
+        theta = angle_to_theta(angle)
+        x, y = self.radius * math.cos(theta), self.radius * math.sin(theta)
+        return self.x + x, self.y - y
+
+    def paintEvent(self, ev):
+        super(AdjustablePieChart, self).paintEvent(ev)
+
+        p = QPainter(self)
+        angle = 0
+        for item in self._items:
+            if item.fraction > 0:
+                angle += fraction_to_angle(item.fraction)
+                x, y = self._cartesian(angle)
+                p.drawEllipse(QPointF(x, y), 5, 5)
