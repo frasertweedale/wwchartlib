@@ -47,7 +47,7 @@ class TestChart(qt.QtTestCase):
         self.assertIsInstance(self.chart, QWidget)
 
     def test_init(self):
-        self.assertIsNone(self.chart.chartItems())
+        self.assertListEqual(self.chart.chartItems(), [])
 
         # init with items; use tuple to test list conversion
         chart = wwchartlib.chart.Chart(items=tuple(self.items))
@@ -99,12 +99,25 @@ class TestChart(qt.QtTestCase):
         self.assertListEqual(self.chart.chartItems(), [self.i1])
 
     def test_add_same_item(self):
-        self.addChartItem(self.i1)
+        self.chart.addChartItem(self.i1)
         with self.assertRaisesRegexp(
             ValueError,
             '[Ii]tem is already in .*[Cc]hart'
         ):
-            self.addChartItem(self.i2)
+            self.chart.addChartItem(self.i1)
+
+        # make sure the failure didn't affect the list of items
+        self.assertListEqual(self.chart.chartItems(), [self.i1])
+
+        # test setChartItems
+        with self.assertRaisesRegexp(
+            ValueError,
+            '[Ii]tem appears multiple times'
+        ):
+            self.chart.setChartItems([self.i2, self.i2])
+
+        # make sure the failure didn't affect the list of items
+        self.assertListEqual(self.chart.chartItems(), [self.i1])
 
     def test_add_bogus_item(self):
         with self.assertRaisesRegexp(TypeError, '[Nn]ot a .*ChartItem.*'):

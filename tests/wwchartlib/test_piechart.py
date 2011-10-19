@@ -59,25 +59,31 @@ class TestPieChart(qt.QtTestCase):
         )
 
     def test_add_item_with_non_number_fraction(self):
-        # should work
+        # fraction of 0.5 should work
         item = wwchartlib.piechart.PieChartItem(fraction=0.5)
         self.chart.addChartItem(item)
 
         item_nn = wwchartlib.piechart.PieChartItem(fraction='foo')
-        with self.assertRaisesRegexp(TypeError, '[Nn]on-numeric fraction'):
-            self.chart.addChartItem(item)
+        with self.assertRaisesRegexp(
+            TypeError,
+            '[Ff]raction must be a [Nn]umber'
+        ):
+            self.chart.addChartItem(item_nn)
 
-        with self.assertRaisesRegexp(TypeError, '[Nn]on-numeric fraction'):
-            self.chart.setChartItems(
+        with self.assertRaisesRegexp(
+            TypeError,
+            '[Ff]raction must be a [Nn]umber'
+        ):
+            self.chart.setChartItems([
                 wwchartlib.piechart.PieChartItem(fraction=0.5),
                 wwchartlib.piechart.PieChartItem(fraction='foo'),
-            )
+            ])
 
         # check that the (failed) operation had no effect
         # (the list should be just the original item added)
         self.assertListEqual(self.chart.chartItems(), [item])
 
-    def test_add_item_with_negative_fraction(self):
+    def test_add_item_fraction_lt_0(self):
         # zero should work
         item = wwchartlib.piechart.PieChartItem(fraction=0)
         self.chart.addChartItem(item)
@@ -90,20 +96,24 @@ class TestPieChart(qt.QtTestCase):
         ):
             self.chart.addChartItem(item_ltz)
 
+        # check that the (failed) operation had no effect
+        # (the list should be just the original item added)
+        self.assertListEqual(self.chart.chartItems(), [item])
+
         with self.assertRaisesRegexp(
             ValueError,
             '[Ff]raction cannot be less than 0'
         ):
-            self.chart.setChartItems(
+            self.chart.setChartItems([
                 wwchartlib.piechart.PieChartItem(fraction=0.5),
                 wwchartlib.piechart.PieChartItem(fraction=-0.5),
-            )
+            ])
 
         # check that the (failed) operation had no effect
         # (the list should be just the original item added)
         self.assertListEqual(self.chart.chartItems(), [item])
 
-    def test_sum_fractions_gt_1(self):
+    def test_add_item_fraction_gt_1(self):
         # add an item = 1 (should work)
         item = wwchartlib.piechart.PieChartItem(fraction=1)
         self.chart.addChartItem(item)
@@ -119,7 +129,24 @@ class TestPieChart(qt.QtTestCase):
         ):
             self.chart.addChartItem(item_gt1)
 
-        # add a good item
+        # check that the (failed) operation had no effect
+        # (list should be empty)
+        self.assertListEqual(self.chart.chartItems(), [])
+
+        with self.assertRaisesRegexp(
+            ValueError,
+            '[Ff]raction cannot be greater than 1'
+        ):
+            self.chart.setChartItems([
+                wwchartlib.piechart.PieChartItem(fraction=0),
+                wwchartlib.piechart.PieChartItem(fraction=1.5),
+            ])
+
+        # check that the (failed) operation had no effect
+        # (list should be empty)
+        self.assertListEqual(self.chart.chartItems(), [])
+
+    def test_sum_fractions_gt_1(self):
         item = wwchartlib.piechart.PieChartItem(fraction=0.5)
         self.chart.addChartItem(item)
 
@@ -135,12 +162,12 @@ class TestPieChart(qt.QtTestCase):
         # test a list that sums to > 1
         with self.assertRaisesRegexp(
             ValueError,
-            '[Ss]um of fractions cannot be greater than 1'
+            '[Ss]um of.*fractions cannot be greater than 1'
         ):
-            self.chart.setChartItems(
+            self.chart.setChartItems([
                 wwchartlib.piechart.PieChartItem(fraction=0.5),
                 wwchartlib.piechart.PieChartItem(fraction=1),
-            )
+            ])
 
         # check that the (failed) operation had no effect
         # (the list should be just the original item added)
