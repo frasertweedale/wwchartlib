@@ -98,30 +98,14 @@ class TestChart(qt.QtTestCase):
         self.assertIs(self.chart.removeChartItem(-1), self.i4)  # pop from end
         self.assertListEqual(self.chart.chartItems(), [self.i1])
 
-    def test_check_items(self):
-        # no items
+    def test_add_same_item(self):
+        self.addChartItem(self.i1)
         with self.assertRaisesRegexp(
-            wwchartlib.chart.ChartItemError,
-            'No items'
+            ValueError,
+            '[Ii]tem is already in .*[Cc]hart'
         ):
-            self.chart._check_items()
+            self.addChartItem(self.i2)
 
-        # add bogus item
-        self.chart.addChartItem(1)
-        with self.assertRaisesRegexp(
-            wwchartlib.chart.ChartItemError,
-            r'Not all items are instances of .*ChartItem.*'
-        ):
-            self.chart._check_items()
-
-        # add legit item and check again
-        self.chart.addChartItem(self.i1)
-        with self.assertRaisesRegexp(
-            wwchartlib.chart.ChartItemError,
-            r'Not all items are instances of .*ChartItem.*'
-        ):
-            self.chart._check_items()
-
-        # blast bogus item
-        self.assertEquals(self.chart.removeChartItem(0), 1)
-        self.chart._check_items()  # should not raise exception
+    def test_add_bogus_item(self):
+        with self.assertRaisesRegexp(TypeError, '[Nn]ot a .*ChartItem.*'):
+            self.chart.addChartItem(1)

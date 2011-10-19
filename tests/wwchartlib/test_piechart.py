@@ -58,43 +58,90 @@ class TestPieChart(qt.QtTestCase):
             QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         )
 
-    def test_check_items(self):
-        item_ltz = wwchartlib.piechart.PieChartItem(fraction=-0.5)
+    def test_add_item_with_non_number_fraction(self):
+        # should work
+        item = wwchartlib.piechart.PieChartItem(fraction=0.5)
+        self.chart.addChartItem(item)
+
         item_nn = wwchartlib.piechart.PieChartItem(fraction='foo')
+        with self.assertRaisesRegexp(TypeError, '[Nn]on-numeric fraction'):
+            self.chart.addChartItem(item)
 
-        # add bogus item (fraction < 0)
-        self.chart.addChartItem(item_ltz)
+        with self.assertRaisesRegexp(TypeError, '[Nn]on-numeric fraction'):
+            self.chart.setChartItems(
+                wwchartlib.piechart.PieChartItem(fraction=0.5),
+                wwchartlib.piechart.PieChartItem(fraction='foo'),
+            )
+
+        # check that the (failed) operation had no effect
+        # (the list should be just the original item added)
+        self.assertListEqual(self.chart.chartItems(), [item])
+
+    def test_add_item_with_negative_fraction(self):
+        # zero should work
+        item = wwchartlib.piechart.PieChartItem(fraction=0)
+        self.chart.addChartItem(item)
+
+        # less than zero should fail
+        item_ltz = wwchartlib.piechart.PieChartItem(fraction=-0.5)
         with self.assertRaisesRegexp(
-            wwchartlib.piechart.PieChartItemError,
-            'fraction cannot be less than 0'
+            ValueError,
+            '[Ff]raction cannot be less than 0'
         ):
-            self.chart._check_items()
+            self.chart.addChartItem(item_ltz)
 
-        # remove bogus item
-        self.chart.removeChartItem(0)
-
-        # add bogus item (non-numeric fraction)
-        self.chart.addChartItem(item_nn)
         with self.assertRaisesRegexp(
-            wwchartlib.piechart.PieChartItemError,
-            'non-numeric fraction'
+            ValueError,
+            '[Ff]raction cannot be less than 0'
         ):
-            self.chart._check_items()
+            self.chart.setChartItems(
+                wwchartlib.piechart.PieChartItem(fraction=0.5),
+                wwchartlib.piechart.PieChartItem(fraction=-0.5),
+            )
 
-        # remove bogus item
-        self.chart.removeChartItem(0)
+        # check that the (failed) operation had no effect
+        # (the list should be just the original item added)
+        self.assertListEqual(self.chart.chartItems(), [item])
 
-        # add bogus item list (sum of fractions > 1)
-        item_1 = wwchartlib.piechart.PieChartItem(fraction=0.5)
-        item_2 = wwchartlib.piechart.PieChartItem(fraction=0.5)
-        item_3 = wwchartlib.piechart.PieChartItem(fraction=0.5)
-        self.chart.setChartItems([item_1, item_2, item_3])
+    def test_sum_fractions_gt_1(self):
+        # add an item = 1 (should work)
+        item = wwchartlib.piechart.PieChartItem(fraction=1)
+        self.chart.addChartItem(item)
+
+        # clear chart
+        self.chart.setChartItems([])
+
+        # add single item > 1
+        item_gt1 = wwchartlib.piechart.PieChartItem(fraction=1.5)
         with self.assertRaisesRegexp(
-            wwchartlib.piechart.PieChartItemError,
-            'Sum of fractions is greater than 1'
+            ValueError,
+            '[Ff]raction cannot be greater than 1'
         ):
-            self.chart._check_items()
+            self.chart.addChartItem(item_gt1)
 
-        # remove one item (sum should then equal 1)
-        self.chart.removeChartItem(2)
-        self.chart._check_items()
+        # add a good item
+        item = wwchartlib.piechart.PieChartItem(fraction=0.5)
+        self.chart.addChartItem(item)
+
+        # add an item to take it over 1
+        item_toobig = wwchartlib.piechart.PieChartItem(fraction=1)
+        with self.assertRaisesRegexp(ValueError, '[Ff]raction is too large'):
+            self.chart.addChartItem(item_toobig)
+
+        # check that the (failed) operation had no effect
+        # (the list should be just the original item added)
+        self.assertListEqual(self.chart.chartItems(), [item])
+
+        # test a list that sums to > 1
+        with self.assertRaisesRegexp(
+            ValueError,
+            '[Ss]um of fractions cannot be greater than 1'
+        ):
+            self.chart.setChartItems(
+                wwchartlib.piechart.PieChartItem(fraction=0.5),
+                wwchartlib.piechart.PieChartItem(fraction=1),
+            )
+
+        # check that the (failed) operation had no effect
+        # (the list should be just the original item added)
+        self.assertListEqual(self.chart.chartItems(), [item])
