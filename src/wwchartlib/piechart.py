@@ -24,6 +24,11 @@ def fraction_to_angle(fraction):
     return fraction * 360 * 16
 
 
+def angle_to_fraction(angle):
+    """Convert an angle (in Qt terms) to a fraction."""
+    return angle / 16 / 360
+
+
 def theta_to_angle(theta):
     """Convert an angle in radians to an angle in Qt terms."""
     return theta * 360 / (2 * math.pi) * 16
@@ -32,6 +37,14 @@ def theta_to_angle(theta):
 def angle_to_theta(angle):
     """Convert an angle in Qt terms to radians."""
     return angle / 16 / 360 * (2 * math.pi)
+
+
+def opposite_angle(angle):
+    """Determine the opposite angle to the angle given, in Qt terms."""
+    angle += 180 * 16
+    if angle >= 360 * 16:
+        angle -= 360 * 16
+    return angle
 
 
 class PieChartItemError(chart.ChartItemError):
@@ -103,6 +116,7 @@ class PieChart(chart.Chart):
 
 class AdjustablePieChart(PieChart):
     """A ``PieChart`` with adjustable slices."""
+    _grip_radius = 5
 
     @property
     def x(self):
@@ -124,13 +138,18 @@ class AdjustablePieChart(PieChart):
         """The radius of the chart."""
         return min(self.origin)
 
+    def __init__(self, **kwargs):
+        """Initialise the adjustable pie chart."""
+        super(AdjustablePieChart, self).__init__(**kwargs)
+        self._gripped_item = None  # the item currently being adjusted
+
     def _polar(self, x, y):
         """Convert cartisian coordinates to polar coordinates.
 
         Return (radius, angle) (angle in Qt terms).
         """
         rel_x = x - self.x
-        rel_y = y - self.y
+        rel_y = self.y - y
         theta = math.atan2(rel_y, rel_x)
         theta = theta if theta >= 0 else theta + math.pi * 2
         return self.radius, theta_to_angle(theta)
@@ -147,13 +166,86 @@ class AdjustablePieChart(PieChart):
         x, y = self.radius * math.cos(theta), self.radius * math.sin(theta)
         return self.x + x, self.y - y
 
+    def _grips(self):
+        """A generator for the cartesian coordinates of all grips.
+
+        Return x, y, item where item is the items whose grip should be
+        found at the given coordinates.
+        """
+        angle = 0
+        for item in self._items:
+            angle += fraction_to_angle(item.fraction)
+            yield self._cartesian(angle) + (item,)
+
     def paintEvent(self, ev):
         super(AdjustablePieChart, self).paintEvent(ev)
 
         p = QPainter(self)
         angle = 0
-        for item in self._items:
-            if item.fraction > 0:
-                angle += fraction_to_angle(item.fraction)
-                x, y = self._cartesian(angle)
-                p.drawEllipse(QPointF(x, y), 5, 5)
+        for x, y, item in self._grips():
+            p.drawEllipse(QPointF(x, y), self._grip_radius, self._grip_radius)
+
+    def mousePressEvent(self, ev):
+        """Check if an item is being gripped.
+
+        If multiple grips are in the same place, the *last* matching
+        grip is recorded as the gripped item.
+        """
+        gripped_item = None
+        for x, y, item in self._grips():
+            # see if press event is on this grip
+            radius = math.sqrt((x - ev.x()) ** 2 + (y - ev.y()) ** 2)
+            if radius < self._grip_radius:
+                gripped_item = item
+        self._gripped_item = gripped_item
+
+    def mouseMoveEvent(self, ev):
+        if self._gripped_item:
+            gripped_item = self._gripped_item
+            index = self._items.index(gripped_item)
+            previous_items = self._items[:index]
+            next_items = self._items[index + 1:]
+
+            # calculate some interesting angles for this item
+            #
+            # A slice cannot become smaller than its base_angle and
+            # cannot become larger than its max_angle
+            base_angle = fraction_to_angle(
+                sum(item.fraction for item in previous_items)
+            )
+            cur_angle = base_angle + fraction_to_angle(gripped_item.fraction)
+            max_angle = cur_angle + fraction_to_angle(
+                next_items[0].fraction if next_items else 1
+            )
+
+            # calculate current angle of pointer
+            radius, angle = self._polar(ev.x(), ev.y())
+
+            # determine whether we have grown to max or shrunk to base
+            # if the angle is not between base and max
+            if not base_angle <= angle <= max_angle:
+                midline = opposite_angle((max_angle + base_angle) / 2)
+                if midline < 180 * 16 and 0 <= angle < midline:
+                    angle = max_angle
+                elif midline >= 180 * 16 and midline <= angle <= 360 * 16:
+                    angle = base_angle
+                elif angle < base_angle:
+                    angle = base_angle
+                else:
+                    angle = max_angle
+
+            if angle != cur_angle:  # angle has changed
+                # set the fraction of the gripped_item
+                gripped_item.fraction = \
+                    max(angle_to_fraction(angle - base_angle), 0)
+
+                # subtract new angle from next item (if there is one)
+                if next_items:
+                    fraction_delta = angle_to_fraction(angle - cur_angle)
+                    next_items[0].fraction = \
+                        max(next_items[0].fraction - fraction_delta, 0)
+
+            self.update()
+
+    def mouseReleaseEvent(self, ev):
+        self._gripped_item = False
