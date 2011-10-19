@@ -8,6 +8,7 @@ position.
 from __future__ import division
 
 import math
+import numbers
 
 from PySide.QtCore import *
 from PySide.QtGui import *
@@ -69,23 +70,34 @@ class PieChartItem(chart.ChartItem):
 class PieChart(chart.Chart):
     _item_class = PieChartItem
 
+    @classmethod
+    def _check_item(cls, item):
+        if not isinstance(item.fraction, numbers.Number):
+            raise TypeError('PieChartItem fraction must be a Number.')
+        if item.fraction < 0:
+            raise ValueError('PieChartItem fraction cannot be less than 0.')
+        if item.fraction > 1:
+            raise ValueError('PieChartItem fraction cannot be greater than 1.')
+        return super(PieChart, cls)._check_item(item)
+
+    @classmethod
+    def _check_items(cls, items):
+        if sum(item.fraction for item in items):
+            raise ValueError(
+                'Sum of PieChartItem fractions cannot be greater than 1.'
+            )
+        return super(PieChart, cls)._check_items(items)
+
     def __init__(self, **kwargs):
         super(PieChart, self).__init__(**kwargs)
         # get as much space as possible
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
 
-    def _check_items(self):
-        super(PieChart, self)._check_items()
-        try:
-            if any(x.fraction < 0 for x in self._items):
-                raise PieChartItemError(
-                    'PieChartItem fraction cannot be less than 0.')
-            if sum(x.fraction for x in self._items) > 1:
-                raise PieChartItemError('Sum of fractions is greater than 1.')
-        except TypeError:
-            raise PieChartItemError(
-                'Items with undefined or non-numeric fraction.'
-            )
+    def addChartItem(self, item, **kwargs):
+        self._check_item(item)
+        if sum((x.fraction for x in self._items), item.fraction) > 1:
+            raise ValueError('PieChartItem fraction is too large.')
+        super(PieChart, self).addChartItem(item, **kwargs)
 
     def _square(self):
         """Return a centered, square QRect of the maximum size possible."""

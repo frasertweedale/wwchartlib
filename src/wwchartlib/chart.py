@@ -36,15 +36,36 @@ class ChartItem(object):
 class Chart(QWidget):
     _item_class = ChartItem
 
+    @classmethod
+    def _check_item(cls, item):
+        """Check the item, returning it if the check is successful.
+
+        Raise an exception if the item is not valid.
+        """
+        if not isinstance(item, cls._item_class):
+            raise TypeError('Not a {}.'.format(cls._item_class))
+        return item
+
+    @classmethod
+    def _check_items(cls, items):
+        """Check the item list, returning it if the check is successful.
+
+        Raise an exception if the item list is not valid.
+        """
+        if any(items.count(item) > 1 for item in items):
+            raise ValueError('Item appears multiple times in list.')
+        return items
+
     def __init__(self, parent=None, items=None):
         super(Chart, self).__init__(parent=parent)
-        self._items = None
+        self._items = []
         if items:
             self.setChartItems(items)
 
     def setChartItems(self, items):
         """Set the list of ``PieChartItem``s."""
-        self._items = list(items)
+        items = [self._check_item(item) for item in items]
+        self._items = self._check_items(items)
 
     def chartItems(self):
         """Return the list of ``ChartItem``s."""
@@ -58,7 +79,12 @@ class Chart(QWidget):
         index
           Where to insert the item.  If negative, item is inserted as
           the last item.
+
+        The same item cannot be added to the list multiple times.
         """
+        self._check_item(item)
+        if item in self._items:
+            raise ValueError('Item is already in the chart.')
         if self._items is None:
             self._items = [item]
         elif index < 0:
@@ -79,11 +105,3 @@ class Chart(QWidget):
         item = self._items.pop(index)
         self.update()
         return item
-
-    def _check_items(self):
-        if not self._items:
-            raise ChartItemError('No items.')
-        if not all(isinstance(x, self._item_class) for x in self._items):
-            raise ChartItemError(
-                'Not all items are instances of {}'.format(self._item_class)
-            )
