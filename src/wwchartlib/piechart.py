@@ -248,4 +248,4 @@ class AdjustablePieChart(PieChart):
             self.update()
 
     def mouseReleaseEvent(self, ev):
-        self._gripped_item = False
+        self._gripped_item = None
