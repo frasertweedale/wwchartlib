@@ -48,14 +48,6 @@ def opposite_angle(angle):
     return angle
 
 
-class PieChartItemError(chart.ChartItemError):
-    pass
-
-
-class PieChartError(chart.ChartError):
-    pass
-
-
 class PieChartItem(chart.ChartItem):
     def __init__(self, fraction=None, **kwargs):
         """Initialise the pie chart item.

@@ -7,16 +7,6 @@ import wwchartlib.chart
 from .. import qt
 
 
-class TestChartItemError(unittest.TestCase):
-    def test_base(self):
-        self.assertTrue(issubclass(wwchartlib.chart.ChartItemError, Exception))
-
-
-class TestChartError(unittest.TestCase):
-    def test_base(self):
-        self.assertTrue(issubclass(wwchartlib.chart.ChartError, Exception))
-
-
 class TestChartItem(unittest.TestCase):
     def test_base(self):
         pass

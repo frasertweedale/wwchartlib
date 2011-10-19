@@ -8,19 +8,6 @@ import wwchartlib.piechart
 from .. import qt
 
 
-class TestPieChartItemError(unittest.TestCase):
-    def test_base(self):
-        self.assertTrue(issubclass(
-            wwchartlib.piechart.PieChartItemError,
-            wwchartlib.chart.ChartItemError))
-
-
-class TestChartError(unittest.TestCase):
-    def test_base(self):
-        self.assertTrue(issubclass(
-            wwchartlib.piechart.PieChartError, wwchartlib.chart.ChartError))
-
-
 class TestPieChartItem(unittest.TestCase):
     def test_base(self):
         self.assertTrue(issubclass(

@@ -5,14 +5,6 @@ Common classes and routines for ``wwchartlib``.
 from PySide.QtGui import *
 
 
-class ChartItemError(Exception):
-    pass
-
-
-class ChartError(Exception):
-    pass
-
-
 class ChartItem(object):
     def __init__(self, label=None, value=None, data=None, **kwargs):
         """Initialise the chart item.
