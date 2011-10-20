@@ -23,6 +23,7 @@ position.
 
 from __future__ import division
 
+import itertools
 import math
 import numbers
 
@@ -119,15 +120,33 @@ class PieChart(chart.Chart):
             shortest_side
         )
 
+    def _colours(self):
+        """A generator of ``QColor`` objects for the pie chart.
+
+        One colour will be generated for each slice.  In the HSV colour
+        space, the colours will be evenly spaced around the cylinder
+        (i.e., the hues will be as distinct as possible), with set
+        saturation and value.
+        """
+        hue_delta = 360 / len(self._items)
+        hue = 0
+        for i in xrange(len(self._items)):
+            yield QColor.fromHsv(int(math.floor(hue)), 191, 255)
+            hue += hue_delta
+
     def paintEvent(self, ev):
         """Paint the pie chart."""
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        pen = QPen()
+        pen.setWidth(2)
+        p.setPen(pen)
         rect = self._square()
 
         angle = 0
-        for item in self._items:
+        for item, colour in itertools.izip(self._items, self._colours()):
             if item.fraction > 0:
+                p.setBrush(QBrush(colour))
                 span = fraction_to_angle(item.fraction)
                 p.drawPie(rect, angle, span)
                 angle += span
@@ -201,6 +220,10 @@ class AdjustablePieChart(PieChart):
 
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        pen = QPen()
+        pen.setWidth(2)
+        p.setPen(pen)
+        p.setBrush(Qt.GlobalColor.white)
         angle = 0
         for x, y, item in self._grips():
             p.drawEllipse(QPointF(x, y), self._grip_radius, self._grip_radius)
