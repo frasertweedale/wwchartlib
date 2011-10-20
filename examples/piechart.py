@@ -9,7 +9,7 @@ from PySide.QtGui import *
 import wwchartlib.piechart
 
 app = QApplication(sys.argv)
-items = [wwchartlib.piechart.PieChartItem(fraction=0.2)] * 4
+items = [wwchartlib.piechart.PieChartItem(fraction=0.2) for x in range(4)]
 chart = wwchartlib.piechart.PieChart(items=items)
 chart.show()
 
