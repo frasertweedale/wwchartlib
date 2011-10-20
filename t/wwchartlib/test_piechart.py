@@ -146,6 +146,10 @@ class TestPieChart(qt.QtTestCase):
         # (the list should be just the original item added)
         self.assertListEqual(self.chart.chartItems(), [item])
 
+        # add an item to take it to exactly 1 (should succeed)
+        item = wwchartlib.piechart.PieChartItem(fraction=0.5)
+        self.chart.addChartItem(item)
+
         # test with a list that sums to exactly 1; should succeed
         itemA = wwchartlib.piechart.PieChartItem(fraction=0.5)
         itemB = wwchartlib.piechart.PieChartItem(fraction=0.5)
