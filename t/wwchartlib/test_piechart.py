@@ -146,6 +146,11 @@ class TestPieChart(qt.QtTestCase):
         # (the list should be just the original item added)
         self.assertListEqual(self.chart.chartItems(), [item])
 
+        # test with a list that sums to exactly 1; should succeed
+        itemA = wwchartlib.piechart.PieChartItem(fraction=0.5)
+        itemB = wwchartlib.piechart.PieChartItem(fraction=0.5)
+        self.chart.setChartItems([itemA, itemB])
+
         # test a list that sums to > 1
         with self.assertRaisesRegexp(
             ValueError,
@@ -157,5 +162,5 @@ class TestPieChart(qt.QtTestCase):
             ])
 
         # check that the (failed) operation had no effect
-        # (the list should be just the original item added)
-        self.assertListEqual(self.chart.chartItems(), [item])
+        # (the list should be that from the earlier setChartItems
+        self.assertListEqual(self.chart.chartItems(), [itemA, itemB])
