@@ -74,7 +74,7 @@ class PieChart(chart.Chart):
 
     @classmethod
     def _check_items(cls, items):
-        if sum(item.fraction for item in items):
+        if sum(item.fraction for item in items) > 1:
             raise ValueError(
                 'Sum of PieChartItem fractions cannot be greater than 1.'
             )
