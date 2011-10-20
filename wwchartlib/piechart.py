@@ -176,10 +176,16 @@ class AdjustablePieChart(PieChart):
         """The radius of the chart."""
         return min(self.origin)
 
-    def __init__(self, **kwargs):
-        """Initialise the adjustable pie chart."""
+    def __init__(self, maintain_total=False, **kwargs):
+        """Initialise the adjustable pie chart.
+
+        ``maintain_total``
+          Whether the total of the items' fractions should be kept the
+          same.  Defaults to ``False``.
+        """
         super(AdjustablePieChart, self).__init__(**kwargs)
         self._gripped = []  # currently-active grips
+        self._maintain_total = maintain_total
 
     def _polar(self, x, y):
         """Convert cartisian coordinates to polar coordinates.
@@ -212,7 +218,10 @@ class AdjustablePieChart(PieChart):
         given coordinates.
         """
         angle = 0
-        for item in self._items:
+        n = len(self._items)
+        # omit last grip if we need to maintain the total fraction
+        stop = n - 1 if self._maintain_total else n
+        for item in self._items[:stop]:
             angle += fraction_to_angle(item.fraction)
             yield self._cartesian(angle) + (angle, item)
 
