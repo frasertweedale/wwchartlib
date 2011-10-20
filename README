@@ -1,0 +1,14 @@
+Collection of Qt chart widgets
+------------------------------
+
+Provides some nice Qt chart widgets.  Requires the PySide_ Qt bindings.
+
+At this time, wwchartlib provides a couple of pie chart widgets.  More
+widgets may come in time.  Feel free to contribute!
+
+``wwchartlib.piechart.PieChart``
+  Simple pie chart widget.
+``wwchartlib.piechart.AdjustablePieChart``
+  A pie chart whose slices are adjustable.
+
+.. _PySide: http://www.pyside.org/
