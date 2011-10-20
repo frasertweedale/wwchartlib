@@ -105,8 +105,6 @@ class PieChart(chart.Chart):
 
     def paintEvent(self, ev):
         """Paint the pie chart."""
-        self._check_items()
-
         p = QPainter(self)
         rect = self._square()
 
