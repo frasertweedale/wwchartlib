@@ -122,6 +122,7 @@ class PieChart(chart.Chart):
     def paintEvent(self, ev):
         """Paint the pie chart."""
         p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
         rect = self._square()
 
         angle = 0
@@ -199,6 +200,7 @@ class AdjustablePieChart(PieChart):
         super(AdjustablePieChart, self).paintEvent(ev)
 
         p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
         angle = 0
         for x, y, item in self._grips():
             p.drawEllipse(QPointF(x, y), self._grip_radius, self._grip_radius)
