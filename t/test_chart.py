@@ -4,7 +4,7 @@ from PySide.QtGui import *
 
 import wwchartlib.chart
 
-from .. import qt
+from . import qt
 
 
 class TestChartItem(unittest.TestCase):

@@ -5,7 +5,7 @@ from PySide.QtGui import *
 import wwchartlib.chart
 import wwchartlib.piechart
 
-from .. import qt
+from . import qt
 
 
 class TestPieChartItem(unittest.TestCase):
