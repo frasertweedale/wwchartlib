@@ -216,9 +216,8 @@ class AdjustablePieChart(PieChart):
                 sum(item.fraction for item in previous_items)
             )
             cur_angle = base_angle + fraction_to_angle(gripped_item.fraction)
-            max_angle = cur_angle + fraction_to_angle(
-                next_items[0].fraction if next_items else 1
-            )
+            max_angle = cur_angle + fraction_to_angle(next_items[0].fraction) \
+                if next_items else fraction_to_angle(1)
 
             # calculate current angle of pointer
             radius, angle = self._polar(ev.x(), ev.y())
