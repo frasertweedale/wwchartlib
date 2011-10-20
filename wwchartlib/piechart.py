@@ -179,7 +179,7 @@ class AdjustablePieChart(PieChart):
     def __init__(self, **kwargs):
         """Initialise the adjustable pie chart."""
         super(AdjustablePieChart, self).__init__(**kwargs)
-        self._gripped_item = None  # the item currently being adjusted
+        self._gripped = []  # currently-active grips
 
     def _polar(self, x, y):
         """Convert cartisian coordinates to polar coordinates.
@@ -207,13 +207,14 @@ class AdjustablePieChart(PieChart):
     def _grips(self):
         """A generator for the cartesian coordinates of all grips.
 
-        Return x, y, item where item is the items whose grip should be
-        found at the given coordinates.
+        Return ``x, y, angle, item`` where ``angle`` is the angle of the
+        grip and ``item`` is the items whose grip should be found at the
+        given coordinates.
         """
         angle = 0
         for item in self._items:
             angle += fraction_to_angle(item.fraction)
-            yield self._cartesian(angle) + (item,)
+            yield self._cartesian(angle) + (angle, item)
 
     def paintEvent(self, ev):
         super(AdjustablePieChart, self).paintEvent(ev)
@@ -225,26 +226,36 @@ class AdjustablePieChart(PieChart):
         p.setPen(pen)
         p.setBrush(Qt.GlobalColor.white)
         angle = 0
-        for x, y, item in self._grips():
+        for x, y, angle, item in self._grips():
             p.drawEllipse(QPointF(x, y), self._grip_radius, self._grip_radius)
 
     def mousePressEvent(self, ev):
-        """Check if an item is being gripped.
-
-        If multiple grips are in the same place, the *last* matching
-        grip is recorded as the gripped item.
-        """
-        gripped_item = None
-        for x, y, item in self._grips():
-            # see if press event is on this grip
-            radius = math.sqrt((x - ev.x()) ** 2 + (y - ev.y()) ** 2)
-            if radius < self._grip_radius:
-                gripped_item = item
-        self._gripped_item = gripped_item
+        """Record the active grips."""
+        self._gripped = [
+            (x, y, angle, item)
+            for x, y, angle, item in self._grips()
+            if math.sqrt((x - ev.x()) ** 2 + (y - ev.y()) ** 2)
+                < self._grip_radius
+        ]
 
     def mouseMoveEvent(self, ev):
-        if self._gripped_item:
-            gripped_item = self._gripped_item
+        if self._gripped:
+            # calculate current angle of pointer
+            radius, angle = self._polar(ev.x(), ev.y())
+
+            # if there are multiple grips (in same spot), use first item
+            # if the angle has decreased wrt the grip angle, otherwise
+            # use the last item.
+            #
+            # Use angle of the last grip for the comparison: if two grips
+            # are superimposed at 0 and 360 degrees, we need to be able
+            # to manipulate the last item.
+            if len(self._gripped) > 1 and angle < self._gripped[-1][2]:
+                self._gripped = [self._gripped[0]]
+            else:
+                self._gripped = [self._gripped[-1]]
+
+            gripped_item = self._gripped[0][3]
             index = self._items.index(gripped_item)
             previous_items = self._items[:index]
             next_items = self._items[index + 1:]
@@ -259,9 +270,6 @@ class AdjustablePieChart(PieChart):
             cur_angle = base_angle + fraction_to_angle(gripped_item.fraction)
             max_angle = cur_angle + fraction_to_angle(next_items[0].fraction) \
                 if next_items else fraction_to_angle(1)
-
-            # calculate current angle of pointer
-            radius, angle = self._polar(ev.x(), ev.y())
 
             # determine whether we have grown to max or shrunk to base
             # if the angle is not between base and max
@@ -290,4 +298,4 @@ class AdjustablePieChart(PieChart):
             self.update()
 
     def mouseReleaseEvent(self, ev):
-        self._gripped_item = None
+        self._gripped = []
