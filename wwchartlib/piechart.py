@@ -165,7 +165,6 @@ class AdjustablePieChart(PieChart):
     """Signal emitted when adjustment has finished."""
     finishedAdjusting = Signal()
 
-
     @property
     def x(self):
         """x component of the origin of the chart."""

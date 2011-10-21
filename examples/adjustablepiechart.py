@@ -28,4 +28,15 @@ items = [wwchartlib.piechart.PieChartItem(fraction=0.2) for x in range(5)]
 chart = wwchartlib.piechart.AdjustablePieChart(items=items, maintain_total=1)
 chart.show()
 
+
+# connect some signals
+def _itemAdjusted(item):
+    print "item adjusted: {}".format(item)
+chart.itemAdjusted.connect(_itemAdjusted)
+
+
+def _finishedAdjusting():
+    print "finished adjusting: {}".format(chart)
+chart.finishedAdjusting.connect(_finishedAdjusting)
+
 app.exec_()
