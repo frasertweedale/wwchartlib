@@ -156,6 +156,16 @@ class AdjustablePieChart(PieChart):
     """A ``PieChart`` with adjustable slices."""
     _grip_radius = 5
 
+    """Signal emitted during slice adjustment.
+
+    The argument is the ``PieChartItem`` whose fraction changed.
+    """
+    itemAdjusted = Signal(PieChartItem)
+
+    """Signal emitted when adjustment has finished."""
+    finishedAdjusting = Signal()
+
+
     @property
     def x(self):
         """x component of the origin of the chart."""
@@ -297,14 +307,19 @@ class AdjustablePieChart(PieChart):
                 # set the fraction of the gripped_item
                 gripped_item.fraction = \
                     max(angle_to_fraction(angle - base_angle), 0)
+                self.itemAdjusted.emit(gripped_item)
 
                 # subtract new angle from next item (if there is one)
                 if next_items:
                     fraction_delta = angle_to_fraction(angle - cur_angle)
                     next_items[0].fraction = \
                         max(next_items[0].fraction - fraction_delta, 0)
+                    self.itemAdjusted.emit(next_items[0])
 
             self.update()
 
     def mouseReleaseEvent(self, ev):
+        if self._gripped:
+            # something was gripped, but now is not; emit finishedAdjusting
+            self.finishedAdjusting.emit()
         self._gripped = []
