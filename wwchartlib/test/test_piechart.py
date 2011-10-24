@@ -58,7 +58,10 @@ class TestPieChart(qt.QtTestCase):
         # check size policy
         self.assertEqual(
             self.chart.sizePolicy(),
-            QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+            QSizePolicy(
+                QSizePolicy.MinimumExpanding,
+                QSizePolicy.MinimumExpanding
+            )
         )
 
     def test_add_item_with_non_number_fraction(self):
