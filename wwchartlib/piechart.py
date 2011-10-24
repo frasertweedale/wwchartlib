@@ -77,6 +77,11 @@ class PieChartItem(chart.ChartItem):
 
 
 class PieChart(chart.Chart):
+    """Pie chart widget.
+
+    The default size policy is
+    ``QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)``
+    """
     _item_class = PieChartItem
 
     @classmethod
@@ -100,7 +105,10 @@ class PieChart(chart.Chart):
     def __init__(self, **kwargs):
         super(PieChart, self).__init__(**kwargs)
         # get as much space as possible
-        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self.setSizePolicy(
+            QSizePolicy.MinimumExpanding,
+            QSizePolicy.MinimumExpanding
+        )
 
     def addChartItem(self, item, **kwargs):
         self._check_item(item)
