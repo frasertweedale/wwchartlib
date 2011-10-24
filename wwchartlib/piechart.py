@@ -102,6 +102,31 @@ class PieChart(chart.Chart):
             )
         return super(PieChart, cls)._check_items(items)
 
+    @property
+    def x(self):
+        """x component of the origin of the chart."""
+        return self.width() / 2
+
+    @property
+    def y(self):
+        return self.height() / 2
+        """y component of the origin of the chart."""
+
+    @property
+    def origin(self):
+        """The origin of this pie chart, as tuple (x, y)."""
+        return self.x, self.y
+
+    @property
+    def radius(self):
+        """The radius of the chart.
+
+        This is slightly less than half the shortest (cartesian)
+        dimension of the widget, so that the graph does not go all the
+        way to the edge.
+        """
+        return min(self.origin) - 5
+
     def __init__(self, **kwargs):
         super(PieChart, self).__init__(**kwargs)
         # get as much space as possible
@@ -118,14 +143,11 @@ class PieChart(chart.Chart):
 
     def _square(self):
         """Return a centered, square QRect of the maximum size possible."""
-        width = self.width()
-        height = self.height()
-        shortest_side = min(width, height)
         return QRect(
-            (width - shortest_side) / 2,
-            (height - shortest_side) / 2,
-            shortest_side,
-            shortest_side
+            self.width() / 2 - self.radius,
+            self.height() / 2 - self.radius,
+            self.radius * 2,
+            self.radius * 2
         )
 
     def _colours(self):
@@ -174,24 +196,13 @@ class AdjustablePieChart(PieChart):
     finishedAdjusting = Signal()
 
     @property
-    def x(self):
-        """x component of the origin of the chart."""
-        return self.width() / 2
-
-    @property
-    def y(self):
-        return self.height() / 2
-        """y component of the origin of the chart."""
-
-    @property
-    def origin(self):
-        """The origin of this pie chart, as tuple (x, y)."""
-        return self.x, self.y
-
-    @property
     def radius(self):
-        """The radius of the chart."""
-        return min(self.origin)
+        """The radius of the chart.
+
+        So that the handles can be drawn properly, this is slightly less
+        than half the shortest (cartesian) dimension of the widget.
+        """
+        return min(self.origin) - self._grip_radius * 4
 
     def __init__(self, maintain_total=False, **kwargs):
         """Initialise the adjustable pie chart.
