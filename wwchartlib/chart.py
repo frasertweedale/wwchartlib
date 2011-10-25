@@ -74,6 +74,7 @@ class Chart(QWidget):
         """Set the list of ``PieChartItem``s."""
         items = [self._check_item(item) for item in items]
         self._items = self._check_items(items)
+        self.update()  # repaint
 
     def chartItems(self):
         """Return the list of ``ChartItem``s."""

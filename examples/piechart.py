@@ -30,23 +30,32 @@ chart = wwchartlib.piechart.PieChart(items=items)
 chart.show()
 
 
-def _remove():
-    chart.removeChartItem(0)
-
-
-timer1 = QTimer()
-timer1.setSingleShot(True)
-timer1.timeout.connect(_remove)
-
-
 def _add():
     chart.addChartItem(wwchartlib.piechart.PieChartItem(fraction=0.1))
     timer1.start(1000)
 
 
+def _remove():
+    chart.removeChartItem(0)
+    timer2.start(1000)
+
+
+def _set():
+    chart.setChartItems(
+        [wwchartlib.piechart.PieChartItem(fraction=0.1) for x in range(5)]
+    )
+
 timer = QTimer()
 timer.setSingleShot(True)
 timer.timeout.connect(_add)
 timer.start(1000)
+
+timer1 = QTimer()
+timer1.setSingleShot(True)
+timer1.timeout.connect(_remove)
+
+timer2 = QTimer()
+timer2.setSingleShot(True)
+timer2.timeout.connect(_set)
 
 app.exec_()
