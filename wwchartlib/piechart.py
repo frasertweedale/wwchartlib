@@ -75,6 +75,14 @@ class PieChartItem(chart.ChartItem):
         super(PieChartItem, self).__init__(**kwargs)
         self.fraction = fraction or 0
 
+        """The ``QColor`` of this slice.
+
+        Initialised to ``QColor(0, 0, 0)``.  This property is only set
+        by ``PieChart``, not read.  Setting it will have no effect, and
+        it will be overwritten when the chart is next painted.
+        """
+        self.colour = QColor(0, 0, 0)
+
 
 class PieChart(chart.Chart):
     """Pie chart widget.
@@ -135,11 +143,20 @@ class PieChart(chart.Chart):
             QSizePolicy.MinimumExpanding
         )
 
+    def setChartItems(self, *args, **kwargs):
+        super(PieChart, self).setChartItems(*args, **kwargs)
+        self._set_colours()
+
     def addChartItem(self, item, **kwargs):
         self._check_item(item)
         if sum((x.fraction for x in self._items), item.fraction) > 1:
             raise ValueError('PieChartItem fraction is too large.')
         super(PieChart, self).addChartItem(item, **kwargs)
+        self._set_colours()
+
+    def removeChartItem(self, *args, **kwargs):
+        super(PieChart, self).removeChartItems(*args, **kwargs)
+        self._set_colours()
 
     def _square(self):
         """Return a centered, square QRect of the maximum size possible."""
@@ -164,6 +181,11 @@ class PieChart(chart.Chart):
             yield QColor.fromHsv(int(math.floor(hue)), 191, 255)
             hue += hue_delta
 
+    def _set_colours(self):
+        """Set the colours of all items in the cart."""
+        for item, colour in itertools.izip(self._items, self._colours()):
+            item.colour = colour  # set the current colour
+
     def paintEvent(self, ev):
         """Paint the pie chart."""
         p = QPainter(self)
@@ -174,9 +196,9 @@ class PieChart(chart.Chart):
         rect = self._square()
 
         angle = 0
-        for item, colour in itertools.izip(self._items, self._colours()):
+        for item in self._items:
             if item.fraction > 0:
-                p.setBrush(QBrush(colour))
+                p.setBrush(QBrush(item.colour))
                 span = fraction_to_angle(item.fraction)
                 p.drawPie(rect, angle, span)
                 angle += span
