@@ -18,7 +18,7 @@ setup(
         ),
     ],
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: X11 Applications :: Qt',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: '
